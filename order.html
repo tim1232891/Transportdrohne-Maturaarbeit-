@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set active = 'order' %}
+{% block content %}
+
+<section class="order-section">
+  <h1>Transportauftrag</h1>
+  <p class="intro-text">Bitte füllen Sie die folgenden Angaben aus, um einen sicheren und schnellen Transportauftrag mit unserer KUE Transportdrohne zu starten.</p>
+
+  {% if success %}
+    <div class="success-box">
+      <h3>Auftrag gespeichert</h3>
+      <p>Vielen Dank! Ihr Auftrag wurde erfolgreich gesichert.<br>
+      Auftragsnummer: <strong>#{{ job_id }}</strong></p>
+    </div>
+  {% endif %}
+
+  {% if errors %}
+    <div class="error-box">
+      <h3>Bitte überprüfen Sie Ihre Eingaben:</h3>
+      <ul>
+        {% for e in errors %}
+          <li>{{ e }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="POST" class="order-form" id="orderForm">
+    <div class="field">
+      <label for="name">Name *</label>
+      <input type="text" id="name" name="name" value="{{ form.get('name','') }}">
+    </div>
+    <div class="field">
+      <label for="phone">Telefon</label>
+      <input type="text" id="phone" name="phone" value="{{ form.get('phone','') }}">
+    </div>
+    <div class="field">
+      <label for="street">Straße & Hausnummer *</label>
+      <input type="text" id="street" name="street" value="{{ form.get('street','') }}">
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="zip">PLZ *</label>
+        <input type="text" id="zip" name="zip" value="{{ form.get('zip','') }}">
+      </div>
+      <div class="field">
+        <label for="city">Stadt *</label>
+        <input type="text" id="city" name="city" value="{{ form.get('city','') }}">
+      </div>
+    </div>
+    <div class="field">
+      <label for="country">Land *</label>
+      <input type="text" id="country" name="country" value="{{ form.get('country','') }}">
+    </div>
+    <div class="field">
+      <label for="notes">Zusatzinfos</label>
+      <textarea id="notes" name="notes" rows="4">{{ form.get('notes','') }}</textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" id="submitBtn" class="btn-primary"> Auftrag absenden</button>
+    </div>
+  </form>
+</section>
+
+<!-- Drohnen-Overlay -->
+<div id="droneOverlay" style="display:none;">
+  <img src="{{ url_for('static', filename='assets/drone-icon.png') }}" alt="Drohne" class="drone">
+</div>
+
+<!-- Danke-Box -->
+<div id="thankYouBox" class="success-box" style="display:none;">
+  <h3>Auftrag gespeichert</h3>
+  <p>Vielen Dank! Ihr Auftrag wurde erfolgreich gesichert.</p>
+</div>
+
+{% endblock %}

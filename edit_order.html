@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Order bearbeiten</h2>
+  <form method="post">
+    <div class="field">
+      <label for="name">Name</label>
+      <input type="text" name="name" value="{{ order['name'] }}">
+    </div>
+
+    <div class="field">
+      <label for="phone">Telefon</label>
+      <input type="text" name="phone" value="{{ order['phone'] or '' }}">
+    </div>
+
+    <div class="field">
+      <label for="street">Strasse</label>
+      <input type="text" name="street" value="{{ order['street'] or '' }}">
+    </div>
+    <div class="field">
+      <label for="zip">PLZ</label>
+      <input type="text" name="zip" value="{{ order['zip'] or '' }}">
+    </div>
+    <div class="field">
+      <label for="city">Ort</label>
+      <input type="text" name="city" value="{{ order['city'] or '' }}">
+    </div>
+    <div class="field">
+      <label for="country">Land</label>
+      <input type="text" name="country" value="{{ order['country'] or '' }}">
+    </div>
+
+    <div class="field">
+      <label for="lat">Latitude</label>
+      <input type="text" name="lat" inputmode="decimal" value="{{ order['lat'] or '' }}">
+    </div>
+    <div class="field">
+      <label for="lon">Longitude</label>
+      <input type="text" name="lon" inputmode="decimal" value="{{ order['lon'] or '' }}">
+    </div>
+
+    <div class="field">
+      <label for="notes">Notes</label>
+      <textarea name="notes">{{ order['notes'] or '' }}</textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">Speichern</button>
+      <a href="{{ url_for('admin') }}" class="btn-secondary">Zurück</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

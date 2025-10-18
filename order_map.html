@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% set active = 'order_map' %}
+{% block content %}
+
+<section class="order-map-section">
+  <h1>Transportauftrag – Adresse & Ablageort</h1>
+  <p class="intro-text">
+    Geben Sie Ihre Adresse ein und wählen Sie anschließend auf der Karte den genauen Ablageort (z. B. Garten, Terrasse).
+  </p>
+
+  {% if success %}
+    <div class="success-box">
+      <h3>Auftrag gespeichert</h3>
+      <p>Vielen Dank! Ihr Auftrag wurde erfolgreich gesichert.<br>
+      Auftragsnummer: <strong>#{{ job_id }}</strong></p>
+    </div>
+  {% endif %}
+
+  {% if errors %}
+    <div class="error-box">
+      <h3>Bitte überprüfen Sie Ihre Eingaben:</h3>
+      <ul>
+        {% for e in errors %}
+          <li>{{ e }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="POST" class="order-form">
+    <div class="field">
+      <label for="name">Name *</label>
+      <input type="text" id="name" name="name" value="{{ form.get('name','') }}">
+    </div>
+
+    <div class="field">
+      <label for="street">Straße & Hausnummer *</label>
+      <input type="text" id="street" name="street" value="{{ form.get('street','') }}">
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="zip">PLZ *</label>
+        <input type="text" id="zip" name="zip" value="{{ form.get('zip','') }}">
+      </div>
+      <div class="field">
+        <label for="city">Stadt *</label>
+        <input type="text" id="city" name="city" value="{{ form.get('city','') }}">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="country">Land *</label>
+      <input type="text" id="country" name="country" value="{{ form.get('country','') }}">
+    </div>
+
+    <div class="field">
+      <label for="notes">Zusatzinfos</label>
+      <textarea id="notes" name="notes" rows="4">{{ form.get('notes','') }}</textarea>
+    </div>
+
+    <!-- Karte -->
+    <h3>Ablageort wählen</h3>
+    <div id="map" style="height: 400px; border-radius: 12px; margin: 20px 0;"></div>
+
+    <!-- Hidden-Felder -->
+    <input type="hidden" name="lat" id="lat">
+    <input type="hidden" name="lon" id="lon">
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">Auftrag absenden</button>
+    </div>
+  </form>
+</section>
+
+<!-- Leaflet.js einbinden -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  var map = L.map('map').setView([47.3769, 8.5417], 13); // Start Zürich
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  var marker;
+  map.on('click', function(e) {
+    if (marker) {
+      map.removeLayer(marker);
+    }
+    marker = L.marker(e.latlng).addTo(map);
+    document.getElementById('lat').value = e.latlng.lat;
+    document.getElementById('lon').value = e.latlng.lng;
+  });
+</script>
+
+{% endblock %}

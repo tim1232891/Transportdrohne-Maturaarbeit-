@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-head">
+  <h1>Admin</h1>
+  <p class="sub">Aufträge verwalten · Waypoints prüfen</p>
+</div>
+
+<!-- ========== Normale Aufträge ========== -->
+<div class="card" id="ordersCard">
+  <div class="card-head">
+    <h2>Normale Aufträge</h2>
+    <div class="actions-inline">
+      <input type="search" id="searchOrders" class="input" placeholder="Suche…" oninput="filterTable('ordersTable', this.value)">
+      <button class="btn btn-secondary" id="ordersSelectToggle" onclick="toggleSelectMode('orders')">✔︎ Auswählen</button>
+      <button class="btn btn-secondary d-none" id="ordersSelectAll" onclick="selectAll('orders', true)">Alle</button>
+      <button class="btn btn-secondary d-none" id="ordersSelectNone" onclick="selectAll('orders', false)">Keine</button>
+      <button class="btn btn-danger d-none" id="ordersBulkBtn" onclick="return openBulkConfirm('ordersBulkForm')" disabled>🗑 Ausgewählte löschen</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <form id="ordersBulkForm" method="post" action="{{ url_for('bulk_delete_orders') }}">
+      <table class="table stacked" id="ordersTable">
+        <thead>
+          <tr>
+            <th class="col-select">Auswahl</th>
+            <th>ID</th><th>Name</th><th>Adresse</th><th>Telefon</th><th>Land</th>
+            <th>Koordinaten</th><th>Erstellt</th><th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in orders %}
+          <tr>
+            <td data-label="Auswahl" class="select-cell">
+              <input type="checkbox" class="row-check orders-check d-none" name="ids" value="{{ r['id'] }}" onclick="updateBulkState('orders')">
+            </td>
+            <td data-label="ID" class="mono">{{ r['id'] }}</td>
+            <td data-label="Name" class="name-cell">{{ r['name'] }}</td>
+            <td data-label="Adresse" class="addr-cell">{{ r['street'] }}, {{ r['zip'] }} {{ r['city'] }}</td>
+            <td data-label="Telefon">{{ r['phone'] or '—' }}</td>
+            <td data-label="Land">{{ r['country'] }}</td>
+            <td data-label="Koordinaten" class="coord mono"><span class="nowrap">{{ r['lat'] or '—' }}, {{ r['lon'] or '—' }}</span></td>
+            <td data-label="Erstellt" class="mono muted">{{ r['created_at'] }}</td>
+            <td data-label="Aktionen" class="row-actions-cell">
+              <div class="row-actions">
+                <a href="{{ url_for('edit_order', order_id=r['id']) }}" class="btn btn-secondary">✏️ <span class="label">Bearbeiten</span></a>
+                <!-- Einzel-Löschen ohne inneres <form>: -->
+                <button type="submit"
+                        form="ordersBulkForm"
+                        formmethod="post"
+                        formaction="{{ url_for('delete_order', order_id=r['id']) }}"
+                        class="btn btn-danger"
+                        onclick="return openConfirm(event)">
+                  🗑 <span class="label">Löschen</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
+  </div>
+</div>
+
+<!-- ========== Extraorders ========== -->
+<div class="card" id="extraCard" style="margin-top:2rem;">
+  <div class="card-head">
+    <h2>Extraorders (mit Waypoints)</h2>
+    <div class="actions-inline">
+      <input type="search" id="searchExtra" class="input" placeholder="Suche…" oninput="filterTable('extraTable', this.value)">
+      <button class="btn btn-secondary" id="extraSelectToggle" onclick="toggleSelectMode('extra')">✔︎ Auswählen</button>
+      <button class="btn btn-secondary d-none" id="extraSelectAll" onclick="selectAll('extra', true)">Alle</button>
+      <button class="btn btn-secondary d-none" id="extraSelectNone" onclick="selectAll('extra', false)">Keine</button>
+      <button class="btn btn-danger d-none" id="extraBulkBtn" onclick="return openBulkConfirm('extraBulkForm')" disabled>🗑 Ausgewählte löschen</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <form id="extraBulkForm" method="post" action="{{ url_for('bulk_delete_extraorders') }}">
+      <table class="table stacked" id="extraTable">
+        <thead>
+          <tr>
+            <th class="col-select">Auswahl</th>
+            <th>ID</th><th>Name</th><th>Telefon</th><th>Notes</th>
+            <th>Waypoints</th><th>Erstellt</th><th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in extraorders %}
+          <tr>
+            <td data-label="Auswahl" class="select-cell">
+              <input type="checkbox" class="row-check extra-check d-none" name="ids" value="{{ e.order['id'] }}" onclick="updateBulkState('extra')">
+            </td>
+            <td data-label="ID" class="mono">{{ e.order['id'] }}</td>
+            <td data-label="Name" class="name-cell">{{ e.order['name'] }}</td>
+            <td data-label="Telefon">{{ e.order['phone'] or '—' }}</td>
+            <td data-label="Notes" class="addr-cell">{{ e.order['notes'] or '—' }}</td>
+            <td data-label="Waypoints">
+              {% if e.waypoints %}
+                <ul class="waypoints">
+                  {% for wp in e.waypoints %}
+                    <li class="mono"><span class="nowrap">{{ wp['lat'] }}, {{ wp['lon'] }}</span></li>
+                  {% endfor %}
+                </ul>
+              {% else %} — {% endif %}
+            </td>
+            <td data-label="Erstellt" class="mono muted">{{ e.order['created_at'] }}</td>
+            <td data-label="Aktionen" class="row-actions-cell">
+              <div class="row-actions">
+                <a href="{{ url_for('edit_extraorder', order_id=e.order['id']) }}" class="btn btn-secondary">✏️ <span class="label">Bearbeiten</span></a>
+                <button type="submit"
+                        form="extraBulkForm"
+                        formmethod="post"
+                        formaction="{{ url_for('delete_extraorder', order_id=e.order['id']) }}"
+                        class="btn btn-danger"
+                        onclick="return openConfirm(event)">
+                  🗑 <span class="label">Löschen</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
+  </div>
+</div>
+
+<!-- ========== Modal ========== -->
+<div class="modal-overlay" id="confirmOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h3 id="confirmTitle">Wirklich löschen?</h3>
+    <p class="muted">⚠️ Diese Aktion kann nicht rückgängig gemacht werden.</p>
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeConfirm()">Abbrechen</button>
+      <a id="confirmDeleteBtn" class="btn btn-danger">Ja, löschen</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .actions-inline{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  /* Responsive "stacked" */
+  .table.stacked thead{ display:none; }
+  .table.stacked tbody tr{ display:grid; grid-template-columns:1fr; gap:10px; padding:14px 12px; border-bottom:1px solid var(--border); }
+  .table.stacked tbody td{ display:flex; align-items:flex-start; gap:12px; background:transparent; border:0; padding:0; }
+  .table.stacked tbody td::before{ content:attr(data-label); flex:0 0 120px; color:var(--muted); font-weight:600; }
+
+  .name-cell{ font-weight:700; }
+  .addr-cell{ color:var(--muted); line-height:1.28; }
+  .coord{ font-variant-numeric: tabular-nums; }
+  .nowrap{ display:inline-block; white-space:nowrap !important; overflow-wrap:normal !important; }
+
+  .row-actions-cell{ padding-top:4px; }
+  .row-actions{ display:flex; gap:8px; align-items:center; }
+
+  .btn-secondary,.btn-danger{
+    background:linear-gradient(180deg,rgba(96,165,250,.16),rgba(96,165,250,.10));
+    border:1px solid rgba(96,165,250,.45); color:var(--text);
+    border-radius:10px; padding:8px 12px; font-size:.92rem; display:inline-flex; gap:8px;
+    transition:background .15s ease, box-shadow .15s ease, transform .05s ease;
+  }
+  .btn-secondary:hover,.btn-danger:hover{ background:linear-gradient(180deg,rgba(96,165,250,.25),rgba(96,165,250,.15)); box-shadow:0 4px 12px rgba(0,0,0,.18); transform:translateY(-1px); }
+
+  .d-none{ display:none !important; }
+  .select-cell input[type="checkbox"]{ transform: translateY(2px); }
+
+  /* Modal basics (falls nicht global vorhanden) */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(15,23,42,.4); display:none; align-items:center; justify-content:center; z-index:1000; }
+  .modal{ background:#fff; border-radius:12px; padding:16px 18px; width:min(520px, 92vw); box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .modal-buttons{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+</style>
+
+<script>
+  // ===== Confirm Modal (Einzellöschung & Bulk) =====
+  let pendingSubmitter = null;  // der geklickte Button
+  function openConfirm(evt){
+    evt.preventDefault();
+    pendingSubmitter = evt.currentTarget.closest('button');
+    const o = document.getElementById('confirmOverlay');
+    o.style.display='flex';
+    o.setAttribute('aria-hidden','false');
+    return false;
+  }
+  function closeConfirm(){
+    const o = document.getElementById('confirmOverlay');
+    o.style.display='none';
+    o.setAttribute('aria-hidden','true');
+    pendingSubmitter = null;
+  }
+  document.getElementById('confirmDeleteBtn').addEventListener('click', function(){
+    if (!pendingSubmitter) { closeConfirm(); return; }
+    const form = pendingSubmitter.form;
+    if (form.requestSubmit) form.requestSubmit(pendingSubmitter);
+    else {
+      const oldAction = form.action, oldMethod = form.method;
+      form.action = pendingSubmitter.getAttribute('formaction') || form.action;
+      form.method = pendingSubmitter.getAttribute('formmethod') || form.method || 'post';
+      form.submit(); form.action = oldAction; form.method = oldMethod;
+    }
+    closeConfirm();
+  });
+
+  function openBulkConfirm(formId){
+    const form = document.getElementById(formId);
+    if (!form.querySelector('.row-check:checked')) return false;
+    // Erzeuge einen temporären „Submitter“, damit formaction=bulk greift
+    const tmp = document.createElement('button');
+    tmp.type = 'submit';
+    tmp.formAction = form.getAttribute('action');
+    tmp.formMethod = form.getAttribute('method') || 'post';
+    form.appendChild(tmp);
+    pendingSubmitter = tmp;
+    const o = document.getElementById('confirmOverlay');
+    o.style.display='flex'; o.setAttribute('aria-hidden','false');
+    return false;
+  }
+
+  // Suche
+  function filterTable(id,q){
+    q=(q||'').toLowerCase();
+    document.querySelectorAll(`#${id} tbody tr`).forEach(tr=>{
+      tr.style.display = tr.innerText.toLowerCase().includes(q)?'':'none';
+    });
+  }
+
+  // ===== Auswahlmodus =====
+  function toggleSelectMode(key){
+    const form = document.getElementById(key==='orders' ? 'ordersBulkForm' : 'extraBulkForm');
+    const btnToggle = document.getElementById(key==='orders' ? 'ordersSelectToggle' : 'extraSelectToggle');
+    const btnAll = document.getElementById(key==='orders' ? 'ordersSelectAll' : 'extraSelectAll');
+    const btnNone = document.getElementById(key==='orders' ? 'ordersSelectNone' : 'extraSelectNone');
+    const btnBulk = document.getElementById(key==='orders' ? 'ordersBulkBtn' : 'extraBulkBtn');
+    const checks = form.querySelectorAll('.row-check');
+
+    const entering = btnAll.classList.contains('d-none');
+    if (entering){
+      btnAll.classList.remove('d-none');
+      btnNone.classList.remove('d-none');
+      btnBulk.classList.remove('d-none');
+      btnToggle.textContent = 'Fertig';
+      checks.forEach(c=>c.classList.remove('d-none'));
+      updateBulkState(key);
+    } else {
+      btnAll.classList.add('d-none');
+      btnNone.classList.add('d-none');
+      btnBulk.classList.add('d-none');
+      btnToggle.textContent = '✔︎ Auswählen';
+      checks.forEach(c=>{ c.checked=false; c.classList.add('d-none'); });
+    }
+  }
+
+  function selectAll(key, checked){
+    const form = document.getElementById(key==='orders' ? 'ordersBulkForm' : 'extraBulkForm');
+    form.querySelectorAll('.row-check').forEach(c=>c.checked = checked);
+    updateBulkState(key);
+  }
+
+  function updateBulkState(key){
+    const form = document.getElementById(key==='orders' ? 'ordersBulkForm' : 'extraBulkForm');
+    const btnBulk = document.getElementById(key==='orders' ? 'ordersBulkBtn' : 'extraBulkBtn');
+    const any = Array.from(form.querySelectorAll('.row-check')).some(c=>c.checked);
+    btnBulk.disabled = !any;
+  }
+</script>
+
+{% endblock %}

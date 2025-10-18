@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% set active = 'order' %}
+{% block content %}
+
+<section class="order-map-step2">
+  <h1>Ablageort wählen</h1>
+
+  {% if success %}
+    <div class="success-box">
+      <h3>Auftrag gespeichert</h3>
+      <p>Vielen Dank! Ihr Auftrag wurde erfolgreich gesichert.<br>
+      Auftragsnummer: <strong>#{{ job_id }}</strong></p>
+    </div>
+
+    <!-- Drohnen-Animation -->
+    <div id="droneOverlay" style="display:none;">
+      <img src="{{ url_for('static', filename='assets/drone-icon.png') }}" alt="Drohne" class="drone">
+    </div>
+
+  {% else %}
+    <p>Klicken Sie auf die Karte, um den Ablageort (z. B. Garten, Terrasse) festzulegen.</p>
+
+    <form method="POST" action="{{ url_for('order_map_step2') }}">
+      <div id="map"
+           style="height: 400px; border-radius: 12px; margin: 20px 0;"
+           data-lat="{{ lat }}"
+           data-lon="{{ lon }}"></div>
+
+      <input type="hidden" name="lat" id="lat" value="{{ lat }}">
+      <input type="hidden" name="lon" id="lon" value="{{ lon }}">
+      <input type="hidden" name="name" value="{{ form.name }}">
+      <input type="hidden" name="street" value="{{ form.street }}">
+      <input type="hidden" name="zip" value="{{ form.zip }}">
+      <input type="hidden" name="city" value="{{ form.city }}">
+      <input type="hidden" name="country" value="{{ form.country }}">
+      <input type="hidden" name="notes" value="{{ form.notes }}">
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Auftrag speichern</button>
+      </div>
+    </form>
+  {% endif %}
+</section>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+{% if not success %}
+<script>
+  var mapDiv = document.getElementById('map');
+  var lat = parseFloat(mapDiv.dataset.lat);
+  var lon = parseFloat(mapDiv.dataset.lon);
+
+  var map = L.map('map').setView([lat, lon], 18);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  var marker = L.marker([lat, lon]).addTo(map);
+
+  map.on('click', function(e) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker(e.latlng).addTo(map);
+    document.getElementById('lat').value = e.latlng.lat;
+    document.getElementById('lon').value = e.latlng.lng;
+  });
+</script>
+{% else %}
+<script>
+  // Wenn Erfolg → Drohnenanimation abspielen
+  window.addEventListener('DOMContentLoaded', () => {
+    const droneOverlay = document.getElementById('droneOverlay');
+    const drone = droneOverlay.querySelector('.drone');
+
+    droneOverlay.style.display = 'flex';
+    drone.classList.add('fly');
+
+    drone.addEventListener('animationend', () => {
+      droneOverlay.style.display = 'none';
+    }, { once: true });
+  });
+</script>
+{% endif %}
+
+{% endblock %}

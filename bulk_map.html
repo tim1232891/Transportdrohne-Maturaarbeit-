@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>Adressen bestätigen</h2>
+  <p id="progress"></p>
+
+  <!-- Adressen ins data-Attribut schreiben -->
+  <div id="map"
+       style="height: 400px; margin:20px 0;"
+       data-addresses='{{ addresses|tojson|safe }}'></div>
+
+  <form id="saveForm" method="POST" action="{{ url_for('bulk_save') }}">
+    <input type="hidden" name="name" id="name">
+    <input type="hidden" name="street" id="street">
+    <input type="hidden" name="zip" id="zip">
+    <input type="hidden" name="city" id="city">
+    <input type="hidden" name="country" id="country">
+    <input type="hidden" name="notes" id="notes">
+    <input type="hidden" name="lat" id="lat">
+    <input type="hidden" name="lon" id="lon">
+
+    <div class="form-actions">
+      <button type="button" id="confirmBtn" class="btn-primary">Bestätigen & nächste Adresse</button>
+    </div>
+  </form>
+
+  <!-- ✅ Erfolgsnachricht -->
+  <div id="successBox" class="success-box" style="display:none; margin-top:20px;">
+    <h3>Alle Aufträge gespeichert ✅</h3>
+    <p>Vielen Dank! Ihre hochgeladenen Adressen wurden erfolgreich übernommen.</p>
+  </div>
+</section>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  // JSON aus dem data-Attribut holen
+  const mapDiv = document.getElementById("map");
+  const addresses = JSON.parse(mapDiv.dataset.addresses || "[]");
+  let currentIndex = 0;
+
+  const map = L.map('map').setView([addresses[0].lat, addresses[0].lon], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+  let marker = L.marker([addresses[0].lat, addresses[0].lon]).addTo(map);
+  document.getElementById("progress").innerText = `Adresse 1 von ${addresses.length}`;
+
+  function loadAddress(index) {
+    const addr = addresses[index];
+    map.setView([addr.lat, addr.lon], 18);
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([addr.lat, addr.lon]).addTo(map);
+
+    // Formfelder füllen
+    document.getElementById("name").value = addr.name;
+    document.getElementById("street").value = addr.street;
+    document.getElementById("zip").value = addr.zip;
+    document.getElementById("city").value = addr.city;
+    document.getElementById("country").value = addr.country;
+    document.getElementById("notes").value = addr.notes || "";
+    document.getElementById("lat").value = addr.lat;
+    document.getElementById("lon").value = addr.lon;
+
+    document.getElementById("progress").innerText = `Adresse ${index+1} von ${addresses.length}`;
+  }
+
+  // Karte klick → Marker setzen
+  map.on('click', function(e) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker(e.latlng).addTo(map);
+    document.getElementById('lat').value = e.latlng.lat;
+    document.getElementById('lon').value = e.latlng.lng;
+  });
+
+  // Button → speichern + nächste Adresse
+  document.getElementById("confirmBtn").addEventListener("click", async () => {
+    const formData = new FormData(document.getElementById("saveForm"));
+    await fetch("{{ url_for('bulk_save') }}", { method:"POST", body:formData });
+
+    currentIndex++;
+    if (currentIndex < addresses.length) {
+      loadAddress(currentIndex);
+    } else {
+      // Formular & Karte ausblenden → Dankesbox anzeigen
+      document.getElementById("saveForm").style.display = "none";
+      document.getElementById("map").style.display = "none";
+      document.getElementById("progress").style.display = "none";
+      document.getElementById("successBox").style.display = "block";
+    }
+  });
+
+  loadAddress(0);
+</script>
+{% endblock %}
