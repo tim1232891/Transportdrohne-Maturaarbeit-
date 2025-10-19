@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set active = 'home' %}
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="hero-btns">
+      <a href="{{ url_for('order') }}" class="btn-primary">Adresse </a>
+      <a href="{{ url_for('extraorder') }}" class="btn-secondary">Karte</a>
+      <a href="{{ url_for('bulk_upload') }}" class="btn-primary">Datei-Import</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- Über uns -->
+<section class="about-split">
+  <div class="about-text">
+    <h2>Über uns</h2>
+    <p>
+      KUE Transportdrohne steht für innovative Lieferlösungen.  
+      Wir entwickeln autonome Drohnen, die Ihre Sendungen sicher, effizient und klimafreundlich ans Ziel bringen.
+    </p>
+  </div>
+  <div class="about-img">
+    <img src="{{ url_for('static', filename='assets/drone-hero.jpeg') }}" alt="Drohne in Aktion">
+  </div>
+</section>
+
+
+<!-- Services -->
+<section class="services">
+  <h2>Unsere Leistungen</h2>
+  <div class="service-grid">
+    <div class="card">
+      <h3>Schnelle Lieferung</h3>
+      <p>Ihre Sendung erreicht den Empfänger in kürzester Zeit – direkt, ohne Umwege.</p>
+    </div>
+    <div class="card">
+      <h3>Maximale Sicherheit</h3>
+      <p>Durch modernste Technologie gewährleisten wir höchste Transport-Sicherheit.</p>
+    </div>
+    <div class="card">
+      <h3>Nachhaltigkeit</h3>
+      <p>Unsere Drohnen sind effizient und emissionsarm – ein Beitrag zur grünen Zukunft.</p>
+    </div>
+  </div>
+</section>
+
+<!-- USP -->
+<section class="why-us">
+  <h2>Warum KUE?</h2>
+  <div class="usp-grid">
+    <div class="usp-card">
+      <h3>Innovative Drohnentechnologie</h3>
+      <p>Modernste Technik für höchste Effizienz und Zuverlässigkeit.</p>
+    </div>
+    <div class="usp-card">
+      <h3>100% digitale Auftragserfassung</h3>
+      <p>Ihre Aufträge werden sicher, schnell und papierlos verarbeitet.</p>
+    </div>
+    <div class="usp-card">
+      <h3>Flexibel, schnell und zuverlässig</h3>
+      <p>Lieferungen, die sich nach Ihnen richten – jederzeit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Kontakt -->
+<section class="contact-cta">
+  <h2>Bereit für die Zukunft?</h2>
+  <p>Erteilen Sie jetzt Ihren Auftrag und profitieren Sie von modernster Logistik.</p>
+  <a href="{{ url_for('order') }}" class="btn-primary">Auftrag starten</a>
+</section>
+
+{% endblock %}
